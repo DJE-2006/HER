@@ -5,12 +5,6 @@ import './styles.css';
 
 export default function ValentinePage() {
   const [showSuccess, setShowSuccess] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [showPhoneNotif, setShowPhoneNotif] = useState(false);
-  const [phoneNotifMessage, setPhoneNotifMessage] = useState('');
-  const [notifTime, setNotifTime] = useState('');
   const [roses, setRoses] = useState<Array<{ x: number; y: number; delay: number }>>([]);
 
   useEffect(() => {
@@ -61,57 +55,7 @@ export default function ValentinePage() {
     }, 200);
   };
 
-  const showToastNotification = (message: string) => {
-    setToastMessage(message);
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 4000);
-  };
 
-  const sendNotification = async (response: 'yes' | 'no') => {
-    const timestamp = new Date().toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
-
-    const message = response === 'yes'
-      ? '💖 SHE SAID YES! She clicked the Yes button! 🎉'
-      : '💔 She clicked No. Better luck next time.';
-
-    setPhoneNotifMessage(message);
-    setNotifTime(timestamp);
-    setShowPhoneNotif(true);
-
-    setTimeout(() => setShowPhoneNotif(false), 8000);
-
-    // Vibrate
-    if ('vibrate' in navigator) {
-      navigator.vibrate(response === 'yes' ? [200, 100, 200] : [300]);
-    }
-
-    // Browser notification
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('Valentine Response', {
-        body: message,
-      });
-    }
-
-    // Send to backend API
-    try {
-      await fetch('/api/submit-response', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          response,
-          answer: response === 'yes' ? 'She said YES! 💖' : 'She said No 💔',
-          timestamp,
-          date: new Date().toLocaleDateString()
-        })
-      });
-    } catch (error) {
-      console.error('Failed to send response:', error);
-    }
-  };
 
   const handleYesClick = () => {
     setShowSuccess(true);
@@ -126,23 +70,13 @@ export default function ValentinePage() {
     setRoses(positions);
 
     celebrateWithFireworks();
-    showToastNotification('🎉 Yayyy! You said YES! 💖');
-    sendNotification('yes');
 
     // Change background
     document.body.style.background = 'linear-gradient(135deg, #FFE4E9 0%, #FFB6C1 50%, #FF69B4 100%)';
   };
 
   const handleNoClick = () => {
-    setShowModal(true);
     document.body.style.filter = 'grayscale(30%)';
-    showToastNotification('💗 Your honesty is appreciated');
-    sendNotification('no');
-  };
-
-  const closeModal = () => {
-    setShowModal(false);
-    document.body.style.filter = 'none';
   };
 
   return (
@@ -241,45 +175,7 @@ export default function ValentinePage() {
         )}
       </div>
 
-      {/* Modal */}
-      {showModal && (
-        <div className="modal show" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>💗 That&apos;s Okay 💗</h2>
-            <p>
-              Thank you for being honest with me. I really appreciate you taking the time to consider it.
-              I hope we can still be friends and that you have a wonderful Valentine&apos;s Day!
-            </p>
-            <button className="modal-close" onClick={closeModal}>
-              Close
-            </button>
-          </div>
-        </div>
-      )}
 
-      {/* Toast */}
-      {showToast && (
-        <div className="toast show">
-          <div className="toast-content">
-            <span className="toast-icon">💗</span>
-            <span className="toast-message">{toastMessage}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Phone Notification */}
-      {showPhoneNotif && (
-        <div className="phone-notification show">
-          <div className="phone-notif-header">
-            <span className="phone-icon">📱</span>
-            <span className="phone-title">Valentine Response</span>
-          </div>
-          <div className="phone-notif-body">
-            <p>{phoneNotifMessage}</p>
-            <span className="phone-notif-time">{notifTime}</span>
-          </div>
-        </div>
-      )}
     </>
   );
 }
