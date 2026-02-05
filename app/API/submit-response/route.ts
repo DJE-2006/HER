@@ -5,206 +5,24 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { response, answer, timestamp, date } = body;
 
-    console.log('Valentine Response Received:', {
-      response,
-      answer,
-      timestamp,
-      date
-    });
+    console.log('Valentine Response Received:', { response, answer, timestamp, date });
 
-    // Send to Formspree
-    await sendToFormspree(response, answer, timestamp, date);
+    // Send a single email notification with SendGrid
+    await sendEmailNotification(response, answer, timestamp, date);
 
-    // Send to Google Forms
-    await sendToGoogleForms(response, answer, timestamp, date);
-
-    // Send to Telegram (optional)
-    await sendToTelegram(response, answer, timestamp, date);
-
-    // Send to Web3Form
-    await sendToWeb3Form(response, answer, timestamp, date);
-
-    // Send SMS via SendGrid (email-to-SMS gateway)
-    await sendToSendGrid(response, answer, timestamp, date);
-
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Response recorded successfully!' 
-    });
+    return NextResponse.json({ success: true, message: 'Email notification sent.' });
   } catch (error) {
     console.error('Error processing response:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to process response' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'Failed to process response' }, { status: 500 });
   }
 }
 
-async function sendToFormspree(
-  response: string,
-  answer: string,
-  timestamp: string,
-  date: string
-) {
-  // SETUP: Replace with your Formspree endpoint
-  const FORMSPREE_ENDPOINT = process.env.FORMSPREE_ENDPOINT || 'YOUR_FORMSPREE_ENDPOINT';
-
-  if (FORMSPREE_ENDPOINT === 'YOUR_FORMSPREE_ENDPOINT') {
-    console.log('Formspree: Please set up your endpoint first!');
-    return;
-  }
-
-  try {
-    const formData = new URLSearchParams();
-    formData.append('response', response);
-    formData.append('answer', answer);
-    formData.append('timestamp', timestamp);
-    formData.append('date', date);
-
-    const res = await fetch(FORMSPREE_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: formData.toString()
-    });
-
-    if (res.ok) {
-      console.log('Formspree: Response sent successfully!');
-    } else {
-      console.error('Formspree: Failed to send response');
-    }
-  } catch (error) {
-    console.error('Formspree error:', error);
-  }
-}
-
-async function sendToGoogleForms(
-  response: string,
-  answer: string,
-  timestamp: string,
-  date: string
-) {
-  // SETUP: Replace with your Google Forms details
-  const GOOGLE_FORM_ID = process.env.GOOGLE_FORM_ID || 'YOUR_GOOGLE_FORM_ID';
-  const ENTRY_RESPONSE = process.env.ENTRY_RESPONSE || 'entry.123456789';
-  const ENTRY_ANSWER = process.env.ENTRY_ANSWER || 'entry.987654321';
-  const ENTRY_TIMESTAMP = process.env.ENTRY_TIMESTAMP || 'entry.111111111';
-  const ENTRY_DATE = process.env.ENTRY_DATE || 'entry.222222222';
-
-  if (GOOGLE_FORM_ID === 'YOUR_GOOGLE_FORM_ID') {
-    console.log('Google Forms: Please set up your form first!');
-    return;
-  }
-
-  try {
-    const formData = new URLSearchParams();
-    formData.append(ENTRY_RESPONSE, response);
-    formData.append(ENTRY_ANSWER, answer);
-    formData.append(ENTRY_TIMESTAMP, timestamp);
-    formData.append(ENTRY_DATE, date);
-
-    const googleFormUrl = `https://docs.google.com/forms/d/e/${GOOGLE_FORM_ID}/formResponse`;
-
-    await fetch(googleFormUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: formData.toString(),
-      mode: 'no-cors'
-    });
-
-    console.log('Google Forms: Response sent successfully!');
-  } catch (error) {
-    console.error('Google Forms error:', error);
-  }
-}
-
-async function sendToTelegram(
-  response: string,
-  answer: string,
-  timestamp: string,
-  date: string
-) {
-  const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || 'YOUR_TELEGRAM_BOT_TOKEN';
-  const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || 'YOUR_CHAT_ID';
-
-  if (TELEGRAM_BOT_TOKEN === 'YOUR_TELEGRAM_BOT_TOKEN' || TELEGRAM_CHAT_ID === 'YOUR_CHAT_ID') {
-    console.log('Telegram: Please set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID');
-    return;
-  }
-
-  try {
-    const text = `Valentine Response: ${answer}\nResponse: ${response}\nTime: ${timestamp}\nDate: ${date}`;
-    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text })
-    });
-
-    if (res.ok) {
-      console.log('Telegram: Message sent successfully!');
-    } else {
-      console.error('Telegram: Failed to send message', await res.text());
-    }
-  } catch (error) {
-    console.error('Telegram error:', error);
-  }
-}
-
-async function sendToWeb3Form(
-  response: string,
-  answer: string,
-  timestamp: string,
-  date: string
-) {
-  const WEB3FORM_ACCESS_KEY = process.env.WEB3FORM_ACCESS_KEY || 'YOUR_WEB3FORM_ACCESS_KEY';
-
-  if (WEB3FORM_ACCESS_KEY === 'YOUR_WEB3FORM_ACCESS_KEY') {
-    console.log('Web3Form: Please set WEB3FORM_ACCESS_KEY');
-    return;
-  }
-
-  try {
-    const formData = new FormData();
-    formData.append('access_key', WEB3FORM_ACCESS_KEY);
-    formData.append('subject', 'Valentine Response Received! 💖');
-    formData.append('from_name', 'Valentine Bot');
-    formData.append('message', `
-Valentine Response: ${answer}
-Response: ${response === 'yes' ? '✅ YES' : '❌ NO'}
-Timestamp: ${timestamp}
-Date: ${date}
-    `);
-
-    const res = await fetch('https://api.web3forms.com/submit', {
-      method: 'POST',
-      body: formData,
-    });
-
-    if (res.ok) {
-      console.log('Web3Form: Response sent successfully!');
-    } else {
-      console.error('Web3Form: Failed to send response');
-    }
-  } catch (error) {
-    console.error('Web3Form error:', error);
-  }
-}
-
-async function sendToSendGrid(
-  response: string,
-  answer: string,
-  timestamp: string,
-  date: string
-) {
+async function sendEmailNotification(response: string, answer: string, timestamp: string, date: string) {
   const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || 'YOUR_SENDGRID_API_KEY';
-  const SMS_RECIPIENT_EMAIL = process.env.SMS_RECIPIENT_EMAIL || '1234567890@vtext.com';
+  const SENDGRID_RECIPIENT = process.env.SENDGRID_RECIPIENT_EMAIL || 'you@example.com';
 
-  if (SENDGRID_API_KEY === 'YOUR_SENDGRID_API_KEY' || SMS_RECIPIENT_EMAIL === '1234567890@vtext.com') {
-    console.log('SendGrid: Please set SENDGRID_API_KEY and SMS_RECIPIENT_EMAIL');
+  if (SENDGRID_API_KEY === 'YOUR_SENDGRID_API_KEY') {
+    console.log('SendGrid: API key not configured. Skipping email.');
     return;
   }
 
@@ -212,9 +30,7 @@ async function sendToSendGrid(
     const text = `Valentine Response: ${answer}\nResponse: ${response}\nTime: ${timestamp}\nDate: ${date}`;
 
     const body = {
-      personalizations: [
-        { to: [{ email: SMS_RECIPIENT_EMAIL }] }
-      ],
+      personalizations: [{ to: [{ email: SENDGRID_RECIPIENT }] }],
       from: { email: 'no-reply@valentine.app', name: 'Valentine Bot' },
       subject: 'Valentine Response',
       content: [{ type: 'text/plain', value: text }]
@@ -229,12 +45,13 @@ async function sendToSendGrid(
       body: JSON.stringify(body)
     });
 
-    if (res.ok) {
-      console.log('SendGrid: SMS/email sent successfully!');
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error('SendGrid: Failed to send email', errText);
     } else {
-      console.error('SendGrid: Failed to send', await res.text());
+      console.log('SendGrid: Email sent successfully');
     }
-  } catch (error) {
-    console.error('SendGrid error:', error);
+  } catch (err) {
+    console.error('SendGrid error:', err);
   }
 }
