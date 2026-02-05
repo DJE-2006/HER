@@ -21,6 +21,9 @@ export async function POST(request: NextRequest) {
     // Send to Telegram (optional)
     await sendToTelegram(response, answer, timestamp, date);
 
+    // Send to Web3Form
+    await sendToWeb3Form(response, answer, timestamp, date);
+
     return NextResponse.json({ 
       success: true, 
       message: 'Response recorded successfully!' 
@@ -147,3 +150,42 @@ async function sendToTelegram(
     console.error('Telegram error:', error);
   }
 }
+
+async function sendToWeb3Form(
+  response: string,
+  answer: string,
+  timestamp: string,
+  date: string
+) {
+  const WEB3FORM_ACCESS_KEY = process.env.WEB3FORM_ACCESS_KEY || 'YOUR_WEB3FORM_ACCESS_KEY';
+
+  if (WEB3FORM_ACCESS_KEY === 'YOUR_WEB3FORM_ACCESS_KEY') {
+    console.log('Web3Form: Please set WEB3FORM_ACCESS_KEY');
+    return;
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append('access_key', WEB3FORM_ACCESS_KEY);
+    formData.append('subject', 'Valentine Response Received! 💖');
+    formData.append('from_name', 'Valentine Bot');
+    formData.append('message', `
+Valentine Response: ${answer}
+Response: ${response === 'yes' ? '✅ YES' : '❌ NO'}
+Timestamp: ${timestamp}
+Date: ${date}
+    `);
+
+    const res = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (res.ok) {
+      console.log('Web3Form: Response sent successfully!');
+    } else {
+      console.error('Web3Form: Failed to send response');
+    }
+  } catch (error) {
+    console.error('Web3Form error:', error);
+  }
