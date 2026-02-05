@@ -18,10 +18,10 @@ export async function POST(request: NextRequest) {
 }
 
 async function sendEmailNotification(response: string, answer: string, timestamp: string, date: string) {
-  const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || 'YOUR_SENDGRID_API_KEY';
-  const SENDGRID_RECIPIENT = process.env.SENDGRID_RECIPIENT_EMAIL || 'you@example.com';
+  const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+  const SENDGRID_RECIPIENT = process.env.SENDGRID_RECIPIENT_EMAIL || 'dhruvjae.guboc@hcdc.edu.ph';
 
-  if (SENDGRID_API_KEY === 'YOUR_SENDGRID_API_KEY') {
+  if (!SENDGRID_API_KEY) {
     console.log('SendGrid: API key not configured. Skipping email.');
     return;
   }
