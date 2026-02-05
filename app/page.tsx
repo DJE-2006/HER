@@ -6,12 +6,33 @@ import './styles.css';
 export default function ValentinePage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [roses, setRoses] = useState<Array<{ x: number; y: number; delay: number }>>([]);
+  const [hearts, setHearts] = useState<any[]>([]);
+  const [petals, setPetals] = useState<any[]>([]);
 
   useEffect(() => {
     // Request notification permission
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
+
+    // Generate hearts only on client
+    const heartEmojis = ['💕', '💖', '💗', '💝', '💓', '💞'];
+    const generatedHearts = Array.from({ length: 15 }).map(() => ({
+      emoji: heartEmojis[Math.floor(Math.random() * heartEmojis.length)],
+      left: `${Math.random() * 100}%`,
+      animationDelay: `${Math.random() * 8}s`,
+      fontSize: `${Math.random() * 20 + 15}px`,
+    }));
+    setHearts(generatedHearts);
+
+    // Generate petals only on client
+    const generatedPetals = Array.from({ length: 30 }).map(() => ({
+      left: `${Math.random() * 100}%`,
+      animationDuration: `${Math.random() * 5 + 5}s`,
+      animationDelay: `${Math.random() * 5}s`,
+      transform: `rotate(${Math.random() * 360}deg)`,
+    }));
+    setPetals(generatedPetals);
   }, []);
 
   const createFirework = (x: number, y: number, color: string) => {
@@ -102,22 +123,19 @@ export default function ValentinePage() {
     <>
       {/* Floating Hearts */}
       <div className="floating-hearts">
-        {Array.from({ length: 15 }).map((_, i) => {
-          const hearts = ['💕', '💖', '💗', '💝', '💓', '💞'];
-          return (
-            <div
-              key={i}
-              className="heart-particle"
-              style={{
-                left: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 8}s`,
-                fontSize: `${Math.random() * 20 + 15}px`
-              }}
-            >
-              {hearts[Math.floor(Math.random() * hearts.length)]}
-            </div>
-          );
-        })}
+        {hearts.map((heart, i) => (
+          <div
+            key={i}
+            className="heart-particle"
+            style={{
+              left: heart.left,
+              animationDelay: heart.animationDelay,
+              fontSize: heart.fontSize,
+            }}
+          >
+            {heart.emoji}
+          </div>
+        ))}
       </div>
 
       {/* Fireworks */}
@@ -125,15 +143,15 @@ export default function ValentinePage() {
 
       {/* Falling Petals */}
       <div className="petals-container">
-        {Array.from({ length: 30 }).map((_, i) => (
+        {petals.map((petal, i) => (
           <div
             key={i}
             className="petal"
             style={{
-              left: `${Math.random() * 100}%`,
-              animationDuration: `${Math.random() * 5 + 5}s`,
-              animationDelay: `${Math.random() * 5}s`,
-              transform: `rotate(${Math.random() * 360}deg)`
+              left: petal.left,
+              animationDuration: petal.animationDuration,
+              animationDelay: petal.animationDelay,
+              transform: petal.transform,
             }}
           />
         ))}
@@ -193,8 +211,6 @@ export default function ValentinePage() {
           </div>
         )}
       </div>
-
-
     </>
   );
 }

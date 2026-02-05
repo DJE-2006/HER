@@ -1,5 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import sgMail from '@sendgrid/mail';
+import { NextRequest, NextResponse } from "next/server";
+
+// This file runs only on the server
+import sgMail from "@sendgrid/mail";
+
 
 export async function POST(request: NextRequest) {
   try {
