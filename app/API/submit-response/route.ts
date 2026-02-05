@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import sgMail from '@sendgrid/mail';
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,32 +26,19 @@ async function sendEmailNotification(response: string, answer: string, timestamp
     console.log('SendGrid: API key not configured. Skipping email.');
     return;
   }
-
   try {
+    sgMail.setApiKey(SENDGRID_API_KEY);
     const text = `Valentine Response: ${answer}\nResponse: ${response}\nTime: ${timestamp}\nDate: ${date}`;
 
-    const body = {
-      personalizations: [{ to: [{ email: SENDGRID_RECIPIENT }] }],
-      from: { email: 'no-reply@valentine.app', name: 'Valentine Bot' },
+    const msg = {
+      to: process.env.SENDGRID_RECIPIENT_EMAIL || SENDGRID_RECIPIENT,
+      from: process.env.SENDGRID_FROM || 'no-reply@valentine.app',
       subject: 'Valentine Response',
-      content: [{ type: 'text/plain', value: text }]
+      text
     };
 
-    const res = await fetch('https://api.sendgrid.com/v3/mail/send', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${SENDGRID_API_KEY}`
-      },
-      body: JSON.stringify(body)
-    });
-
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error('SendGrid: Failed to send email', errText);
-    } else {
-      console.log('SendGrid: Email sent successfully');
-    }
+    const result = await sgMail.send(msg as any);
+    console.log('SendGrid: Email send result', Array.isArray(result) ? result[0].statusCode : result);
   } catch (err) {
     console.error('SendGrid error:', err);
   }
